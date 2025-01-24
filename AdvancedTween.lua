@@ -54,6 +54,28 @@ function AdvancedTween:PlayTween() : () -> ()
 end
 
 --[[
+	Pause the tween.
+]]
+function AdvancedTween:PauseTween() : () -> ()
+
+	if (self._tween ~= nil) then
+		self._tween:Pause();
+	end
+
+end
+
+--[[
+	Cancel the tween.
+]]
+function AdvancedTween:CancelTween() : () -> ()
+	
+	if (self._tween ~= nil) then
+		self._tween:Cancel();
+	end
+	
+end
+
+--[[
 	Yield/Stop the code until the tween finishes playing.
 ]]
 function AdvancedTween:WaitCompletion() : () -> ()
