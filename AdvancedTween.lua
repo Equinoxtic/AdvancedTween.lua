@@ -12,30 +12,39 @@ local Utility = require(script.TweenEasingUtility);
 local Settings = require(script.Settings);
 
 export type TweenProperties = {
-	Easing      : string,
-	StartDelay  : number,
-	Reverse     : boolean,
-	RepeatCount : number
+	Easing      : string;
+	StartDelay  : number;
+	Reverse     : boolean;
+	RepeatCount : number;
+	OnComplete  : () -> ();
 };
 
---[[
-	Create a new 'AdvancedTween'.
-]]
+-- Create a new 'AdvancedTween'.
+--
+-- @param instance Instance               - The instance to tween.
+-- @param values {[string] : any}         - The values of the instance to be tweened.
+-- @param duration number                 - The duration of the tween.
+-- @param tweenProperties TweenProperties - The properties of the tween. (i.e. Easing, StartDelay, etc.)
+-- @return AdvancedTween
 function AdvancedTween.New(instance : Instance, values : {[string] : any}, duration : number, tweenProperties : TweenProperties)
 
 	local self = setmetatable({
+		
 		_tween = Services.TweenService:Create(
 			instance,
 			TweenInfo.new(
 				duration or 0.0,
 				Utility:GetEasingStyle(tweenProperties['Easing']) or Enum.EasingStyle.Linear,
 				Utility:GetEasingDirection(tweenProperties['Easing']) or Enum.EasingDirection.InOut,
-				tweenProperties['RepeatCount'] or 0.0,
-				tweenProperties['Reverse'] or false,
-				tweenProperties['StartDelay'] or 0.0
+				tweenProperties.RepeatCount or 0.0,
+				tweenProperties.Reverse or false,
+				tweenProperties.StartDelay or 0.0
 			),
 			values
 		) :: TweenBase;
+		
+		onComplete = tweenProperties.OnComplete or function() --[[ ... ]] end :: () -> ();
+		
 	}, AdvancedTween);
 
 	return self;
@@ -45,10 +54,14 @@ end
 --[[
 	Play the tween.
 ]]
-function AdvancedTween:PlayTween() : () -> ()
+function AdvancedTween:Play() : () -> ()
 
 	if (self._tween ~= nil) then
+		
 		self._tween:Play();
+		
+		self._tween.Completed:Connect(self.onComplete);
+		
 	end
 
 end
@@ -56,7 +69,7 @@ end
 --[[
 	Pause the tween.
 ]]
-function AdvancedTween:PauseTween() : () -> ()
+function AdvancedTween:Pause() : () -> ()
 
 	if (self._tween ~= nil) then
 		self._tween:Pause();
@@ -67,7 +80,7 @@ end
 --[[
 	Cancel the tween.
 ]]
-function AdvancedTween:CancelTween() : () -> ()
+function AdvancedTween:Cancel() : () -> ()
 	
 	if (self._tween ~= nil) then
 		self._tween:Cancel();
@@ -78,7 +91,7 @@ end
 --[[
 	Yield/Stop the code until the tween finishes playing.
 ]]
-function AdvancedTween:WaitCompletion() : () -> ()
+function AdvancedTween:Wait() : () -> ()
 
 	if (self._tween == nil) then
 		return;
@@ -86,23 +99,6 @@ function AdvancedTween:WaitCompletion() : () -> ()
 
 	self._tween.Completed:Wait();
 
-end
-
---[[
-	If provided with a callback, the tween will call it as soon as the tween is finished/completed.
-]]
-function AdvancedTween:CompletionCallback(callback) : () -> ()
-	
-	if (self._tween == nil) then
-		return;
-	end
-	
-	self._tween.Completed:Connect(callback or function() : () -> ()
-		if (Settings.EnableWarnings) then
-			warn('Callback Missing!');
-		end
-	end);
-	
 end
 
 return AdvancedTween;
